@@ -11,6 +11,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 
 public class board extends AppCompatActivity {
@@ -30,8 +31,9 @@ public class board extends AppCompatActivity {
         Intent intent = getIntent();
 
         gomokuView gomoku = new gomokuView(this);
-        gomoku.setNumColumns(15);
-        gomoku.setNumRows(15);
+        gomoku.setTV((TextView)this.findViewById(R.id.text));
+        gomoku.init(15);
+        //gomoku.setNumRows(15);
 
         setContentView(gomoku);
     }

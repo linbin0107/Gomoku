@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 /**
  * Created by linbin on 2/9/2017.
@@ -17,7 +18,7 @@ public class gomokuView extends View{
     private int cellWidth, cellHeight;
     private int startX = 0, startY = 0;
     private Paint paint = null;
-    private boolean[][] cellChecked;
+    int winFlag = 0;
     final private int STONE_BLACK = 1;
     final private int STONE_WHITE = 2;
     // 2D array, each element indicates a point on the board
@@ -25,36 +26,38 @@ public class gomokuView extends View{
     // track the color of last move
     private int stone_flag = 0;
 
+    public TextView statusTV;
+    CharSequence mText;
+    CharSequence BLACK_WIN = "Black win!!!";
+    CharSequence WHITE_WIN = "White win!!!";
+
     public gomokuView(Context context) {
         super(context);
 
+    }
+
+    public void init(int size) {
         paint = new Paint();
         paint.setColor(0xff000000);
         paint.setAntiAlias(true);
         paint.setStrokeWidth(5);
+
+        winFlag = 0;
+        stone_flag = 0;
+
+        setNumRows(size);
+        setNumColumns(size);
+
+        calculateDimensions();
     }
 
-//    public gomokuView(Context context, AttributeSet attrs) {
-//        super(context, attrs);
-//        //blackPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-//    }
-
-    public void setNumColumns(int numColumns) {
+    private void setNumColumns(int numColumns) {
         this.numColumns = numColumns;
-        calculateDimensions();
+
     }
 
-    public int getNumColumns() {
-        return numColumns;
-    }
-
-    public void setNumRows(int numRows) {
+    private void setNumRows(int numRows) {
         this.numRows = numRows;
-        calculateDimensions();
-    }
-
-    public int getNumRows() {
-        return numRows;
     }
 
     @Override
@@ -70,8 +73,6 @@ public class gomokuView extends View{
 
         cellWidth = getWidth() / numColumns;
         cellHeight = getHeight() / numRows;
-
-        cellChecked = new boolean[numColumns][numRows];
 
         chess = new int [numColumns][numRows];
 
@@ -131,14 +132,31 @@ public class gomokuView extends View{
                 //invalidate();
                 //System.out.println("out of bound");
             } else {
+                // start the game, the black always play first
                 if (stone_flag == 0) {
                     chess[indexX][indexY] = STONE_BLACK;
                     stone_flag = STONE_BLACK;
                 } else if (stone_flag == STONE_BLACK && chess[indexX][indexY] == 0) {
                     chess[indexX][indexY] = STONE_WHITE;
+
+                    if (checkWin(STONE_BLACK)) {
+                        this.init(15);
+                        this.invalidate();
+                        mText = BLACK_WIN;
+                        showTV(mText);
+                    }
+
                     stone_flag = STONE_WHITE;
                 } else if (stone_flag == STONE_WHITE && chess[indexX][indexY] == 0) {
                     chess[indexX][indexY] = STONE_BLACK;
+
+                    if (checkWin(STONE_WHITE)) {
+                        this.init(15);
+                        this.invalidate();
+                        mText = WHITE_WIN;
+                        showTV(mText);
+                    }
+
                     stone_flag = STONE_BLACK;
                 }
             }
@@ -146,5 +164,56 @@ public class gomokuView extends View{
             invalidate();
         }
         return true;
+    }
+
+    public boolean checkWin(int stone_flag) {
+        for (int i = 0; i < numColumns - 1; ++i) {
+            for (int j = 0; j < numRows - 1; ++j) {
+                // check horizontal 5
+                if (((i + 4) < (numColumns - 1)) && (chess[i][j] == stone_flag) &&
+                        (chess[i + 1][j] == stone_flag) && (chess[i + 2][j] == stone_flag) &&
+                        (chess[i + 3][j] == stone_flag) && (chess[i + 4][j] == stone_flag)) {
+                    winFlag = stone_flag;
+                }
+
+                // check vertical 5
+                if (((j + 4) < (numRows - 1)) && (chess[i][j] == stone_flag) &&
+                        (chess[i][j + 1] == stone_flag) && (chess[i][j + 2] == stone_flag) &&
+                        (chess[i][j + 3] == stone_flag) && (chess[i][j + 4] == stone_flag)) {
+                    winFlag = stone_flag;
+                }
+
+                // check from upleft to downright 5
+                if (((j + 4) < (numRows - 1)) && ((i + 4) < (numColumns - 1)) &&
+                        (chess[i][j] == stone_flag) && (chess[i + 1][j + 1] == stone_flag) &&
+                        (chess[i + 2][j + 2] == stone_flag) && (chess[i + 3][j + 3] == stone_flag) &&
+                        (chess[i + 4][j + 4] == stone_flag)) {
+                    winFlag = stone_flag;
+                }
+
+                // check from upright to downleft 5
+                if (((j + 4) < (numRows - 1)) && ((i - 4) >= 0) &&
+                        (chess[i][j] == stone_flag) && (chess[i - 1][j + 1] == stone_flag) &&
+                        (chess[i - 2][j + 2] == stone_flag) && (chess[i - 3][j + 3] == stone_flag) &&
+                        (chess[i - 4][j + 4] == stone_flag)) {
+                    winFlag = stone_flag;
+                }
+            }
+        }
+
+        if (winFlag == stone_flag)
+            return true;
+        else
+            return false;
+    }
+
+    public void setTV(TextView tv) {
+        statusTV = tv;
+        statusTV.setVisibility(View.VISIBLE);
+    }
+
+    public void showTV(CharSequence text) {
+        this.statusTV.setText(text);
+        statusTV.setVisibility(View.VISIBLE);
     }
 }
